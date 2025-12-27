@@ -1,5 +1,5 @@
 const bcrypt=require('bcrypt')
-const User=require("./models/usermodel.js")
+const User=require("../models/usermodel.js")
 const jwt=require("jsonwebtoken")
 
 exports.registerUser=async(req,res)=>{
@@ -45,7 +45,7 @@ exports.loginUser=async(req,res)=>{
             return res.status(400).json("email not registered");
         }
         
-        let isValid= await brcypt.compare(password,user.password);
+        let isValid= await bcrypt.compare(password,user.password);
         if(!isValid){
             return res.status(400).json("wrong password");
         }
@@ -56,7 +56,7 @@ exports.loginUser=async(req,res)=>{
         );
         
 
-        res.json(token,"login successfull");
+        res.json({token, message:"login successfull"});
     }catch(error){
         res.status(400).send("something went wrong");
     }

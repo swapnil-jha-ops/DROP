@@ -1,0 +1,54 @@
+<% layout('layout', { title: 'Dashboard' }) %>
+
+<h2>Welcome back, <%= user.name %></h2>
+
+<div class="grid">
+
+    <a href="/clock/day">
+        <div class="card">
+            <div class="stat"><%= timeLeftToday %> hrs</div>
+            <div class="label">Time left today</div>
+        </div>
+    </a>
+
+    <a href="/goals">
+        <div class="card">
+            <div class="stat"><%= goalsLeft %></div>
+            <div class="label">Goals remaining</div>
+        </div>
+    </a>
+
+    <a href="/clock/week">
+        <div class="card">
+            <div class="stat"><%= weeklyHours %> hrs</div>
+            <div class="label">Studied this week</div>
+        </div>
+    </a>
+
+</div>
+
+<h3>Hourly Goals by Topic</h3>
+
+<div class="grid">
+    <% topics.forEach(topic => { %>
+        <a href="/clock/topic/<%= topic.name %>">
+            <div class="card">
+                <div class="stat"><%= topic.hoursDone %> / <%= topic.target %></div>
+                <div class="label"><%= topic.name %></div>
+            </div>
+        </a>
+    <% }) %>
+</div>
+
+<h3>Ongoing Projects</h3>
+
+<div class="grid">
+    <% projects.forEach(project => { %>
+        <a href="/projects/<%= project.id %>">
+            <div class="card">
+                <div class="stat"><%= project.progress %>%</div>
+                <div class="label"><%= project.name %></div>
+            </div>
+        </a>
+    <% }) %>
+</div>

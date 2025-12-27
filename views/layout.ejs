@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .container {
+            padding: 20px;
+        }
+        .card {
+            background: #020617;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .card:hover {
+            transform: scale(1.02);
+            background: #020617cc;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .stat {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .label {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        nav {
+            background: #020617;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        nav a {
+            margin-left: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><strong>DROP</strong></div>
+    <div>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/goals">Goals</a>
+        <a href="/projects">Projects</a>
+        <a href="/auth/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <%- body %>
+</div>
+
+</body>
+</html>
