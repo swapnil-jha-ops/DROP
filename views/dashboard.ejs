@@ -1,54 +1,996 @@
-<% layout('layout', { title: 'Dashboard' }) %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drop — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #18181f;
+      --surface2: #22222c;
+      --border: #2e2e3a;
+      --accent: #7c6af7;
+      --accent2: #f5a623;
+      --accent3: #3ecf8e;
+      --danger: #f03e3e;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --radius: 14px;
+    }
 
-<h2>Welcome back, <%= user.name %></h2>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-<div class="grid">
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
 
-    <a href="/clock/day">
-        <div class="card">
-            <div class="stat"><%= timeLeftToday %> hrs</div>
-            <div class="label">Time left today</div>
-        </div>
-    </a>
+    /* ── NAVBAR ── */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 40px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-    <a href="/goals">
-        <div class="card">
-            <div class="stat"><%= goalsLeft %></div>
-            <div class="label">Goals remaining</div>
-        </div>
-    </a>
+    .brand {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
 
-    <a href="/clock/week">
-        <div class="card">
-            <div class="stat"><%= weeklyHours %> hrs</div>
-            <div class="label">Studied this week</div>
-        </div>
-    </a>
+    .brand span { color: var(--text); }
 
-</div>
+    .nav-links { display: flex; align-items: center; gap: 8px; }
 
-<h3>Hourly Goals by Topic</h3>
+    .nav-link {
+      text-decoration: none;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 14px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
 
-<div class="grid">
-    <% topics.forEach(topic => { %>
-        <a href="/clock/topic/<%= topic.name %>">
-            <div class="card">
-                <div class="stat"><%= topic.hoursDone %> / <%= topic.target %></div>
-                <div class="label"><%= topic.name %></div>
+    .nav-link:hover, .nav-link.active {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover { background: var(--danger); color: white; }
+
+    /* ── LAYOUT ── */
+    .page { max-width: 1100px; margin: auto; padding: 36px 24px; }
+
+    /* ── WELCOME BAR ── */
+    .welcome-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .welcome-bar h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .welcome-bar p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .welcome-bar p strong { color: var(--accent); }
+
+    /* ── FOCUS CTA ── */
+    .focus-cta {
+      background: linear-gradient(135deg, #4f3de0 0%, #7c6af7 60%, #a78bfa 100%);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .focus-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 50%, rgba(255,255,255,0.12) 0%, transparent 60%);
+    }
+
+    .focus-cta:hover { transform: translateY(-2px); box-shadow: 0 20px 48px rgba(124,106,247,0.35); }
+
+    .focus-cta-text h2 { font-family: 'Syne', sans-serif; font-size: 22px; color: white; }
+    .focus-cta-text p  { color: rgba(255,255,255,0.75); font-size: 14px; margin-top: 4px; }
+
+    .focus-btn {
+      background: white;
+      color: var(--accent);
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .focus-btn:hover { opacity: 0.9; }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 22px 24px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 0 0 var(--radius) var(--radius);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .stat-card[data-status="completed"]::after { background: var(--accent3); }
+    .stat-card[data-status="ongoing"]::after   { background: var(--accent2); }
+    .stat-card[data-status="pending"]::after   { background: var(--danger); }
+
+    .stat-card:hover, .stat-card.active {
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .stat-card.active::after { opacity: 1; }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-card[data-status="completed"] .stat-num { color: var(--accent3); }
+    .stat-card[data-status="ongoing"]   .stat-num { color: var(--accent2); }
+    .stat-card[data-status="pending"]   .stat-num { color: var(--danger); }
+
+    /* ── TWO COLUMN ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* ── ADD TASK FORM ── */
+    .add-task-form { display: flex; gap: 10px; margin-bottom: 16px; }
+
+    .add-task-form input,
+    .add-task-form select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .add-task-form input { flex: 1; }
+    .add-task-form select { min-width: 120px; }
+
+    .add-task-form input:focus,
+    .add-task-form select:focus { border-color: var(--accent); }
+
+    .add-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .add-btn:hover { background: #6857e8; }
+
+    /* ── FILTER PILLS ── */
+    .filter-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+
+    .filter-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-pill:hover { color: var(--text); }
+    .filter-pill.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    /* ── TASK ITEM ── */
+    .task-scroll {
+      max-height: 340px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .task-list { display: flex; flex-direction: column; gap: 2px; }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 10px;
+      border-radius: 9px;
+      transition: background 0.15s;
+      gap: 10px;
+    }
+
+    .task-item:hover { background: var(--surface2); }
+
+    .task-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+    .task-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .task-dot.completed { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); }
+    .task-dot.ongoing   { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+    .task-dot.pending   { background: var(--danger);  box-shadow: 0 0 6px var(--danger); }
+
+    .task-name {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+
+    .task-time { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    .task-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: capitalize;
+      letter-spacing: 0.3px;
+    }
+
+    .badge.completed { background: rgba(62,207,142,0.15); color: var(--accent3); }
+    .badge.ongoing   { background: rgba(245,166,35,0.15);  color: var(--accent2); }
+    .badge.pending   { background: rgba(240,62,62,0.15);   color: var(--danger); }
+
+    .inline-select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .inline-select:focus { border-color: var(--accent); }
+
+    .del-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .del-btn:hover { color: var(--danger); background: rgba(240,62,62,0.1); }
+
+    .empty-msg {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 24px 0;
+    }
+
+    /* ── RECENT ── */
+    .recent-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .recent-item:last-child { border-bottom: none; }
+
+    /* ── FOCUS MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 36px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      animation: popIn 0.25s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .modal h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .modal > p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+    .modal-field { text-align: left; margin-bottom: 20px; }
+    .modal-field label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+
+    .modal-field select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .modal-field select:focus { border-color: var(--accent); }
+
+    .timer-display {
+      font-family: 'Syne', sans-serif;
+      font-size: 56px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 2px;
+      margin-bottom: 28px;
+    }
+
+    .modal-actions { display: flex; gap: 12px; justify-content: center; }
+
+    .modal-btn {
+      padding: 11px 26px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn.primary { background: var(--accent); color: white; }
+    .modal-btn.primary:hover { background: #6857e8; }
+    .modal-btn.ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .modal-btn.ghost:hover { border-color: var(--accent); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 300;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { border-left: 3px solid var(--accent3); }
+    .toast.info    { border-left: 3px solid var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="brand">Dr<span>op</span></div>
+  <div class="nav-links">
+    <a href="/api/user/dashboard" class="nav-link active">Dashboard</a>
+    <a href="/api/user/profile" class="nav-link">Profile</a>
+    <form action="/api/auth/logout" method="POST" style="display:inline;">
+      <button class="logout-btn" type="submit">Logout</button>
+    </form>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ═══════════════════════════════════════════
+       WELCOME  — server renders user name & total focus time
+  ════════════════════════════════════════════ -->
+  <div class="welcome-bar">
+    <div>
+      <h1>Welcome back<% if (typeof user !== 'undefined' && user.name) { %>, <%= user.name.split(' ')[0] %><% } %> 👋</h1>
+      <p>You've focused for <strong><%= totalfocusTime %> minutes</strong> in total.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       FOCUS CTA
+  ════════════════════════════════════════════ -->
+  <div class="focus-cta" onclick="openFocusModal()">
+    <div class="focus-cta-text">
+      <h2>⚡ Start a Focus Session</h2>
+      <p>Lock in. Pick a task and beat the clock.</p>
+    </div>
+    <button class="focus-btn" onclick="openFocusModal(); event.stopPropagation();">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="10"/>
+        <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
+      </svg>
+      Focus Now
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       STATS  — server-rendered counts, JS keeps them live
+  ════════════════════════════════════════════ -->
+  <div class="stats-grid">
+    <div class="stat-card" data-status="completed" onclick="filterTasks('completed', this)">
+      <div class="stat-label">Completed</div>
+      <!
+      -- Initial value from server; JS updates it after client-side adds/deletes -->
+      <div class="stat-num" id="countCompleted"><%= stats.completed %></div>
+    </div>
+    <div class="stat-card" data-status="ongoing" onclick="filterTasks('ongoing', this)">
+      <div class="stat-label">In Progress</div>
+      <div class="stat-num" id="countOngoing"><%= stats.ongoing %></div>
+    </div>
+    <div class="stat-card" data-status="pending" onclick="filterTasks('pending', this)">
+      <div class="stat-label">Pending</div>
+      <div class="stat-num" id="countPending"><%= stats.pending %></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TWO COLUMNS
+  ════════════════════════════════════════════ -->
+  <div class="two-col">
+
+    <!-- ALL TASKS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">All Tasks</div>
+      </div>
+
+      <!-- ADD TASK — POSTs to /api/tasks, also handled client-side for instant feedback -->
+      <div class="add-task-form">
+        <input type="text" id="newTaskInput" placeholder="New task name…"
+               onkeydown="if(event.key==='Enter') addTask()" />
+        <select id="newTaskStatus">
+          <option value="pending">Pending</option>
+          <option value="ongoing">Ongoing</option>
+          <option value="completed">Completed</option>
+        </select>
+        <button class="add-btn" onclick="addTask()">+ Add</button>
+      </div>
+
+      <!-- FILTER PILLS -->
+      <div class="filter-bar">
+        <div class="filter-pill active" data-filter="all"       onclick="filterTasks('all', this)">All</div>
+        <div class="filter-pill"        data-filter="completed" onclick="filterTasks('completed', this)">Completed</div>
+        <div class="filter-pill"        data-filter="ongoing"   onclick="filterTasks('ongoing', this)">Ongoing</div>
+        <div class="filter-pill"        data-filter="pending"   onclick="filterTasks('pending', this)">Pending</div>
+      </div>
+
+      <div class="task-scroll">
+        <div class="task-list" id="taskList">
+          <%
+            /* ── SERVER-SIDE: render initial task list ── */
+            tasks.forEach(function(task) {
+          %>
+            <div class="task-item" data-id="<%= task._id %>" data-status="<%= task.status %>">
+              <div class="task-left">
+                <div class="task-dot <%= task.status %>"></div>
+                <div>
+                  <div class="task-name"><%= task.title %></div>
+                  <div class="task-time"><%= Math.round(task.timeSpent / 60000) %> min focused</div>
+                </div>
+              </div>
+              <div class="task-right">
+                <span class="badge <%= task.status %>"><%= task.status %></span>
+                <select class="inline-select"
+                        onchange="changeStatus('<%= task._id %>', this.value)">
+                  <option value="pending"   <%= task.status === 'pending'   ? 'selected' : '' %>>Pending</option>
+                  <option value="ongoing"   <%= task.status === 'ongoing'   ? 'selected' : '' %>>Ongoing</option>
+                  <option value="completed" <%= task.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                </select>
+                <button class="del-btn" onclick="deleteTask('<%= task._id %>')" title="Delete">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                    <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+                  </svg>
+                </button>
+              </div>
             </div>
-        </a>
-    <% }) %>
-</div>
+          <% }) %>
 
-<h3>Ongoing Projects</h3>
+          <% if (tasks.length === 0) { %>
+            <div class="empty-msg" id="emptyMsg">No tasks yet. Add one above!</div>
+          <% } %>
+        </div>
+      </div>
+    </div>
 
-<div class="grid">
-    <% projects.forEach(project => { %>
-        <a href="/projects/<%= project.id %>">
-            <div class="card">
-                <div class="stat"><%= project.progress %>%</div>
-                <div class="label"><%= project.name %></div>
+    <!-- RECENT TASKS — server-rendered, static (no client updates needed) -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Recent Tasks</div>
+      </div>
+
+      <% if (recentTasks.length === 0) { %>
+        <p class="empty-msg">No recent tasks yet.</p>
+      <% } else { %>
+        <% recentTasks.forEach(function(task) { %>
+          <div class="recent-item">
+            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+              <div class="task-dot <%= task.status %>" style="flex-shrink:0;"></div>
+              <div>
+                <div style="font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">
+                  <%= task.title %>
+                </div>
+                <div style="font-size:12px; color:var(--muted);">
+                  <%= Math.round(task.timeSpent / 60000) %> min focused
+                </div>
+              </div>
             </div>
-        </a>
-    <% }) %>
+            <span class="badge <%= task.status %>"><%= task.status %></span>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+  </div><!-- /.two-col -->
+</div><!-- /.page -->
+
+<!-- ═══════════════════════════════════════════
+     FOCUS MODAL
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="focusModal">
+  <div class="modal">
+    <h2>🎯 Focus Session</h2>
+    <p>Pick a task and start your timer. Time is logged on close.</p>
+
+    <div class="modal-field">
+      <label>Choose Task</label>
+      <select id="focusTaskSelect">
+        <option value="">— Select a task —</option>
+        <%
+          /* Only show incomplete tasks in the focus picker */
+          tasks.filter(t => t.status !== 'completed').forEach(function(task) {
+        %>
+          <option value="<%= task._id %>"><%= task.title %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="timer-display" id="timerDisplay">00:00</div>
+
+    <div class="modal-actions">
+      <button class="modal-btn primary" id="timerToggleBtn" onclick="toggleTimer()">▶ Start</button>
+      <button class="modal-btn ghost"   onclick="closeFocusModal()">Done</button>
+    </div>
+  </div>
 </div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+
+<!-- ═══════════════════════════════════════════
+     CLIENT-SIDE JS
+     Handles: add/delete/filter/status-change/focus-timer
+     All mutating actions also PATCH/POST/DELETE to the API
+════════════════════════════════════════════ -->
+<script>
+  /* ── Bootstrap server data into JS ──────────────────────────────────
+     EJS injects the tasks array so the client always starts in sync.
+     We use task._id (string) as the canonical id throughout.
+  ──────────────────────────────────────────────────────────────────── */
+  let tasks = <%- JSON.stringify(tasks) %>;
+
+  let currentFilter = 'all';
+
+  /* ── Timer state ──────────────────────────────────────────────────── */
+  let timerInterval = null;
+  let timerSeconds  = 0;
+  let timerRunning  = false;
+  let focusTaskId   = null;
+
+  /* ════════════════════════════════════════════════════════════════════
+     RENDER HELPERS
+  ════════════════════════════════════════════════════════════════════ */
+  function updateStats() {
+    document.getElementById('countCompleted').textContent = tasks.filter(t => t.status === 'completed').length;
+    document.getElementById('countOngoing').textContent   = tasks.filter(t => t.status === 'ongoing').length;
+    document.getElementById('countPending').textContent   = tasks.filter(t => t.status === 'pending').length;
+  }
+
+  function renderTaskList() {
+    const list     = document.getElementById('taskList');
+    const filtered = currentFilter === 'all' ? tasks : tasks.filter(t => t.status === currentFilter);
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="empty-msg">No ${currentFilter === 'all' ? '' : currentFilter + ' '}tasks found.</div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(t => `
+      <div class="task-item" data-id="${t._id}" data-status="${t.status}">
+        <div class="task-left">
+          <div class="task-dot ${t.status}"></div>
+          <div>
+            <div class="task-name">${esc(t.title)}</div>
+            <div class="task-time">${Math.round((t.timeSpent || 0) / 60000)} min focused</div>
+          </div>
+        </div>
+        <div class="task-right">
+          <span class="badge ${t.status}">${t.status}</span>
+          <select class="inline-select" onchange="changeStatus('${t._id}', this.value)">
+            <option value="pending"   ${t.status==='pending'  ?'selected':''}>Pending</option>
+            <option value="ongoing"   ${t.status==='ongoing'  ?'selected':''}>Ongoing</option>
+            <option value="completed" ${t.status==='completed'?'selected':''}>Completed</option>
+          </select>
+          <button class="del-btn" onclick="deleteTask('${t._id}')" title="Delete">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function refreshFocusSelect() {
+    const sel = document.getElementById('focusTaskSelect');
+    const active = tasks.filter(t => t.status !== 'completed');
+    sel.innerHTML = '<option value="">— Select a task —</option>' +
+      active.map(t => `<option value="${t._id}">${esc(t.title)}</option>`).join('');
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     FILTER
+  ════════════════════════════════════════════════════════════════════ */
+  function filterTasks(filter, el) {
+    currentFilter = filter;
+
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    const pill = document.querySelector(`.filter-pill[data-filter="${filter}"]`);
+    if (pill) pill.classList.add('active');
+
+    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+    if (el && el.classList.contains('stat-card')) el.classList.add('active');
+
+    renderTaskList();
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     ADD TASK  →  POST /api/tasks
+  ════════════════════════════════════════════════════════════════════ */
+  async function addTask() {
+    const input  = document.getElementById('newTaskInput');
+    const status = document.getElementById('newTaskStatus').value;
+    const title  = input.value.trim();
+
+    if (!title) { showToast('Please enter a task name.', 'info'); input.focus(); return; }
+
+    try {
+      const res  = await fetch('/api/task/create', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ title, status })
+      });
+
+      if (!res.ok) throw new Error('Server error');
+
+      const data = await res.json(); 
+      const newTask = data.task;  // expects { _id, title, status, timeSpent, createdAt }
+      tasks.unshift(newTask);
+      input.value = '';
+      updateStats();
+      renderTaskList();
+      refreshFocusSelect();
+      showToast(`"${title}" added!`, 'success');
+
+    } catch (err) {
+      showToast('Failed to add task. Please try again.', 'info');
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     DELETE TASK  →  DELETE /api/tasks/:id
+  ════════════════════════════════════════════════════════════════════ */
+  async function deleteTask(id) {
+    const task = tasks.find(t => t._id === id);
+
+    try {
+      const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Server error');
+
+      tasks = tasks.filter(t => t._id !== id);
+      updateStats();
+      renderTaskList();
+      refreshFocusSelect();
+      if (task) showToast(`"${task.title}" deleted.`, 'info');
+
+    } catch (err) {
+      showToast('Failed to delete task.', 'info');
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     CHANGE STATUS  →  PATCH /api/tasks/:id
+  ════════════════════════════════════════════════════════════════════ */
+  async function changeStatus(id, newStatus) {
+    const task = tasks.find(t => t._id === id);
+    if (!task) return;
+
+    const oldStatus = task.status;
+    task.status = newStatus;           // optimistic update
+    updateStats();
+    renderTaskList();
+
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status: newStatus })
+      });
+
+      if (!res.ok) throw new Error();
+      refreshFocusSelect();
+
+    } catch (err) {
+      task.status = oldStatus;         // rollback on failure
+      updateStats();
+      renderTaskList();
+      showToast('Failed to update status.', 'info');
+    }
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     FOCUS MODAL
+  ════════════════════════════════════════════════════════════════════ */
+  function openFocusModal() {
+    refreshFocusSelect();
+    resetTimer();
+    document.getElementById('focusModal').classList.add('open');
+  }
+
+  function closeFocusModal() {
+    if (timerRunning) stopTimer(true);   // save time on close
+    document.getElementById('focusModal').classList.remove('open');
+  }
+
+  document.getElementById('focusModal').addEventListener('click', function(e) {
+    if (e.target === this) closeFocusModal();
+  });
+
+  /* ── Timer controls ── */
+  function toggleTimer() { timerRunning ? pauseTimer() : startTimer(); }
+
+  function startTimer() {
+    const sel = document.getElementById('focusTaskSelect');
+    if (!sel.value) { showToast('Please select a task first.', 'info'); return; }
+    focusTaskId = sel.value;
+    sel.disabled = true;               // lock task selection while running
+    timerRunning = true;
+    document.getElementById('timerToggleBtn').textContent = '⏸ Pause';
+    timerInterval = setInterval(() => { timerSeconds++; updateTimerDisplay(); }, 1000);
+  }
+
+  function pauseTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerToggleBtn').textContent = '▶ Resume';
+  }
+
+  /* stopTimer(save) — called when modal closes */
+  async function stopTimer(save) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+
+    if (save && focusTaskId && timerSeconds > 0) {
+      const elapsed = timerSeconds * 1000;
+      const task = tasks.find(t => t._id === focusTaskId);
+
+      /* Optimistic update */
+      if (task) {
+        task.timeSpent = (task.timeSpent || 0) + elapsed;
+        renderTaskList();
+        showToast(`+${Math.round(timerSeconds / 60)} min logged to "${task.title}"`, 'success');
+      }
+
+      /* Persist to server  →  PATCH /api/tasks/:id/time */
+      try {
+        await fetch(`/api/tasks/${focusTaskId}/time`, {
+          method:  'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ addMs: elapsed })
+        });
+      } catch (err) {
+        showToast('Could not save focus time to server.', 'info');
+      }
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning  = false;
+    timerSeconds  = 0;
+    focusTaskId   = null;
+    document.getElementById('focusTaskSelect').disabled = false;
+    document.getElementById('timerToggleBtn').textContent = '▶ Start';
+    updateTimerDisplay();
+  }
+
+  function updateTimerDisplay() {
+    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const s = String(timerSeconds % 60).padStart(2, '0');
+    document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     TOAST
+  ════════════════════════════════════════════════════════════════════ */
+  function showToast(msg, type = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* ── XSS helper ── */
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

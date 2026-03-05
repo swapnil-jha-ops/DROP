@@ -1,18 +1,25 @@
 const bcrypt=require('bcrypt')
 const User=require("../models/usermodel.js")
-const jwt=require("jsonwebtoken")
+const jwt=require("jsonwebtoken");
+const { StrictMode } = require('react');
 
 exports.registerUser=async(req,res)=>{
 try{
-    const{email,name,password}=req.body;
+    const{email,name,password,confirmPassword}=req.body;
     
     if(!name || !password || !email){
-        return res.status(400).json("all fields req");
+        return res.render('register', {error: "All fields are required"});
     }
+    
+    if(password !== confirmPassword){
+        return res.render('register', {error: "Passwords do not match"});
+    }
+    
     let existingUser=await User.findOne({email});
     if (existingUser){
-        return res.status(409).json("user already registered")
+        return res.render('register', {error: "User already registered with this email"});
     }
+    
     const salt=await bcrypt.genSalt(10);
     const hashedpassword=await bcrypt.hash(password,salt);
 
@@ -24,10 +31,11 @@ try{
         }
     );
 
-    return res.status(200).json("user successfully registered");
+    return res.redirect('/api/auth/login'); 
 
 }catch(error){
-    return res.status(400).json("ERROR");
+    console.error("Registration error:", error);
+    return res.render('register', {error: error.message || "Registration failed. Please try again."});
 }
 };
 
@@ -50,20 +58,31 @@ exports.loginUser=async(req,res)=>{
             return res.status(400).json("wrong password");
         }
 
+        if(!process.env.JWT_SECRET){
+            throw new Error("JWT_SECRET is not configured");
+        }
+        
         const token=jwt.sign(
                 {id:user._id},
                 process.env.JWT_SECRET
         );
         
+        res.cookie("token",token,{
+            httpOnly:true,
+            secure:true,
+            sameSite:'strict',
+            maxAge:24*60*60*1000
+        });
+        return res.redirect('/api/user/dashboard');
 
-        res.json({token, message:"login successfull"});
-    }catch(error){
-        res.status(400).send("something went wrong");
+        }catch(error){
+        console.error("Login error:", error);
+        res.status(400).json({error: error.message || "Login failed"});
     }
 
 };
 
 
 exports.logout=(req,res)=>{ 
-    res.json({message:"logout successful"})
+    res.clearCookie("token").redirect('/api/auth/login');
 }
