@@ -815,27 +815,48 @@
     const status = document.getElementById('newTaskStatus').value;
     const title  = input.value.trim();
 
-    if (!title) { showToast('Please enter a task name.', 'info'); input.focus(); return; }
+    console.log('🔵 addTask() called');
+    console.log('Title:', title);
+    console.log('Status:', status);
 
+    if (!title) { 
+      console.warn('⚠️ Title is empty, returning');
+      showToast('Please enter a task name.', 'info'); 
+      input.focus(); 
+      return; 
+    }
+
+    console.log('✅ Proceeding with task creation');
     try {
+      console.log('📤 Sending fetch to /api/task/create');
       const res  = await fetch('/api/task/create', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ title, status })
       });
 
-      if (!res.ok) throw new Error('Server error');
+      console.log('📥 Response:', res.status, res.ok);
+      
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error('❌ Server error:', res.status, errText);
+        throw new Error(`Server error: ${res.status}`);
+      }
 
       const data = await res.json(); 
-      const newTask = data.task;  // expects { _id, title, status, timeSpent, createdAt }
+      console.log('📦 Data:', data);
+      
+      const newTask = data.task;
       tasks.unshift(newTask);
       input.value = '';
       updateStats();
       renderTaskList();
       refreshFocusSelect();
       showToast(`"${title}" added!`, 'success');
+      console.log('✨ Task added successfully');
 
     } catch (err) {
+      console.error('💥 Error:', err);
       showToast('Failed to add task. Please try again.', 'info');
     }
   }
